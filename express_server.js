@@ -13,6 +13,11 @@ const urlDatabase = {
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
+function generateRandomString() {
+  return Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
+
+}
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
