@@ -51,6 +51,12 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortRandm}`);         // redirect to new page
 });
 
+app.get('/u/:shortURL', (req, res) => {
+  
+  const longURL = req.params.shortURL;
+  res.redirect(longURL);
+});
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
