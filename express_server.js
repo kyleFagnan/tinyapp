@@ -2,6 +2,11 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs"); //Set ejs as templating engine
 
@@ -10,8 +15,6 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
 
 function generateRandomString() {
   return Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
@@ -67,6 +70,13 @@ app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   urlDatabase[shortURL] = req.body.newURL;
   res.redirect('/urls');
+});
+//Login
+app.post('/login', (req, res) => {
+  const { username } = req.body;
+  res.cookie('username', username)
+  res.redirect('/urls')
+
 });
 
 
