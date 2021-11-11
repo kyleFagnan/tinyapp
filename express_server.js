@@ -10,10 +10,25 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs"); //Set ejs as templating engine
 
+//database object
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+//users object
+const users = {
+  'user1Id': {
+    id: 'user1',
+    email: 'user1Email',
+    password: 'user1Password'
+  },
+  'user2Id': {
+    id: 'user2',
+    email: 'user2Email',
+    password: 'user2Password'
+  }
+}
 
 
 function generateRandomString() {
@@ -55,6 +70,10 @@ app.get("/urls.json", (req, res) => {
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n")
 })
+//registration page
+app.get("/register", (req, res) => {
+  res.render("urls_register");
+});
 
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
@@ -92,6 +111,22 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls')
+})
+
+//add new user to global users object
+app.post('/register', (req, res) => {
+  const randomId = generateRandomString();
+  
+  const newUser = {
+    id: randomId,
+    email: req.body.email,
+    password: req.body.password
+  }
+  users[newUser.id] = newUser;
+  res.cookie('userId', newUser.id);
+
+  console.log('new user object:', users)
+  res.redirect('/urls');
 })
 
 
