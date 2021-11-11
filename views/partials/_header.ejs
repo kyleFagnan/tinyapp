@@ -12,7 +12,7 @@
         <a href="/register">Register</a>
         <a href="/login">Login</a>
         <% } if(user) { %>
-          <h4>Logged in as: <%=user.email%> </h4>
+          <p>Logged in as: <%=user.email%> </p>
           <form method="post" action="/logout"><button type="submit">logout</button> 
           </form>
           <% } %> 

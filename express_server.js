@@ -1,11 +1,11 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-
 const cookieParser = require('cookie-parser');
+const bodyParser = require("body-parser");
+
 app.use(cookieParser());
 
-const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs"); //Set ejs as templating engine
@@ -18,12 +18,12 @@ const urlDatabase = {
 
 //users database object
 const users = {
-  'user1Id': {
+  'user1': {
     id: 'user1',
     email: 'user1@email.com',
     password: 'user1Pass'
   },
-  'user2Id': {
+  'user2': {
     id: 'user2',
     email: 'user2@email.com',
     password: 'user2Pass'
@@ -47,22 +47,23 @@ const findUserByEmail = (usersData, email) => {
 };
 
 
-
+//get requests
 
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
 app.get("/urls", (req, res) => {
+  
   const templateVars = {
-    user: req.cookies.user_id,
+    user: users[req.cookies['user_id']],
     urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user: req.cookies.user_id
+    user: users[req.cookies['user_id']],
   };
   res.render("urls_new", templateVars);
 });
@@ -71,8 +72,9 @@ app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
 
   const templateVars = {shortURL, 
-    user: req.cookies.user_id,
+    user: users[req.cookies['user_id']],
     longURL: urlDatabase[shortURL]};
+
   res.render("urls_show", templateVars);
 })
 
@@ -83,6 +85,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n")
 })
+
 //registration page
 app.get("/register", (req, res) => {
   const user = users.id;
@@ -107,6 +110,9 @@ app.get('/u/:shortURL', (req, res) => {
   res.redirect(longURL);
 });
 
+//post requests
+
+
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
   const shortRandm = generateRandomString();
@@ -120,15 +126,28 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
+
 //edit a URL 
 app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   urlDatabase[shortURL] = req.body.newURL;
   res.redirect('/urls');
 });
+
 //Login
 app.post('/login', (req, res) => {
-  const { user } = users.id;
+  const { email, password } = req.body;
+  const user = findUserByEmail(users, email);
+
+  //check if user exists
+  if(!user){
+    return res.status(403).end();
+  }
+  //compare password
+  if(password !== user.password){
+    return res.status(403).end();
+  }
+
   res.cookie('user_id', user.id)
   res.redirect('/urls')
 
