@@ -85,7 +85,26 @@ app.get("/hello", (req, res) => {
 })
 //registration page
 app.get("/register", (req, res) => {
-  res.render("urls_register");
+  const user = users.id;
+  const templateVars = {
+    user,
+  }
+  res.render("urls_register", templateVars);
+});
+
+//login page
+app.get("/login", (req, res) => {
+  const user = users.id;
+  const templateVars = {
+    user,
+  }
+  res.render('urls_login', templateVars);
+})
+
+
+app.get('/u/:shortURL', (req, res) => {
+  const longURL = req.params.shortURL;
+  res.redirect(longURL);
 });
 
 app.post("/urls", (req, res) => {
@@ -93,11 +112,6 @@ app.post("/urls", (req, res) => {
   const shortRandm = generateRandomString();
   urlDatabase[shortRandm] = req.body.longURL;
   res.redirect(`/urls/${shortRandm}`);         // redirect to new page
-});
-
-app.get('/u/:shortURL', (req, res) => {
-  const longURL = req.params.shortURL;
-  res.redirect(longURL);
 });
 
 //delete url and return home
