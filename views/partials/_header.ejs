@@ -8,10 +8,11 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <% if(!username) {%>
+        <% if(!user) {%>
         <form method="post" action="/login"><input type="text" name="username" placeholder="Enter Username" ><button type="submit">Login</button></form>
-        <% } else { %>
-          <form method="post" action="/logout"><h4 class="nav-item nav-link" >Logged in as: <%=username%></h4><button type="submit">logout</button> 
+        <% } if(user) { %>
+          <h4>Logged in as: <%=user.email%> </h4>
+          <form method="post" action="/logout"><button type="submit">logout</button> 
           </form>
           <% } %> 
       </div>
