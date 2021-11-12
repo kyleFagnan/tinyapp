@@ -12,8 +12,14 @@ app.set("view engine", "ejs"); //Set ejs as templating engine
 
 //URL database object
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { 
+    longURL: "http://www.lighthouselabs.ca",
+    userID: 'user1'
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: 'user2'
+  }
 };
 
 //users database object
@@ -66,19 +72,20 @@ app.get("/urls/new", (req, res) => {
   if(!users[req.cookies['user_id']]){
     return res.redirect('/register');
   }
-
   const user = users.id;
   const templateVars = {user: users[req.cookies['user_id']]};
   res.render("urls_new", templateVars);
 });
-
+//info about short URL
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-
-  const templateVars = {shortURL, 
-    user: users[req.cookies['user_id']],
-    longURL: urlDatabase[shortURL]};
-
+  if (!urlDatabase[shortURL]) {
+    return res.send("url not found");
+  }
+  const longURL = urlDatabase[shortURL].longURL;
+  const userID = req.cookies["user_id"];
+  
+  const templateVars = {shortURL,user: users['user_id'],longURL,}
   res.render("urls_show", templateVars);
 })
 
@@ -101,9 +108,9 @@ app.get("/register", (req, res) => {
 
 //login page
 app.get("/login", (req, res) => {
-  const user = users.id;
+  const userID = req.cookies['user_id'];
   const templateVars = {
-    user,
+    user: users[userID]
   }
   res.render('urls_login', templateVars);
 })
@@ -133,7 +140,8 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 //edit a URL 
 app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
-  urlDatabase[shortURL] = req.body.newURL;
+  const longURL = req.body.longURL
+  urlDatabase[shortURL].longURL = longURL;
   res.redirect('/urls');
 });
 
