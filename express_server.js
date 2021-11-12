@@ -61,6 +61,18 @@ const specificUrls = function(id, urlDatabase) {
   }
   return urlsForUserDatabase;
 };
+//check if user created url
+const creator = function(cookie, urlDatabase, key) {
+  let urlCreator = true;
+  if (cookie !== urlDatabase[key].userID) {
+    return urlCreator = false;
+  }
+  return urlCreator;
+};
+
+
+
+
 
 //get requests
 
@@ -157,6 +169,10 @@ app.post("/urls", (req, res) => {
 //delete url and return home
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
+  const urlCreator = creator(req.cookies["user_id"], urlDatabase, shortURL);
+  if(!urlCreator) {
+    return res.status(403).send("Not authorized to delete");
+  }
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
@@ -164,6 +180,10 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 //edit a URL 
 app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
+  const urlCreator = creator(req.cookies["user_id"], urlDatabase, shortURL);
+  if(!urlCreator) {
+    return res.status(403).send("Not authorized to edit");
+  }
   const longURL = req.body.longURL
   urlDatabase[shortURL].longURL = longURL;
   res.redirect('/urls');
