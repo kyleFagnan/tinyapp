@@ -61,10 +61,14 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+//create a tiny URL
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
-    user: users[req.cookies['user_id']],
-  };
+  if(!users[req.cookies['user_id']]){
+    return res.redirect('/register');
+  }
+
+  const user = users.id;
+  const templateVars = {user: users[req.cookies['user_id']]};
   res.render("urls_new", templateVars);
 });
 
@@ -114,10 +118,9 @@ app.get('/u/:shortURL', (req, res) => {
 
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  const shortRandm = generateRandomString();
+ const shortRandm = generateRandomString();
   urlDatabase[shortRandm] = req.body.longURL;
-  res.redirect(`/urls/${shortRandm}`);         // redirect to new page
+  res.redirect(`/urls/${shortRandm}`);        
 });
 
 //delete url and return home
