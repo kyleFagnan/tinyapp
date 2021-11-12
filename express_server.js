@@ -1,13 +1,12 @@
 const express = require("express");
 const app = express();
-const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
 const bodyParser = require("body-parser");
+const bcrypt = require('bcryptjs');
 
+const PORT = 8080; // default port 8080
 app.use(cookieParser());
-
 app.use(bodyParser.urlencoded({extended: true}));
-
 app.set("view engine", "ejs"); //Set ejs as templating engine
 
 //URL database object
@@ -198,14 +197,14 @@ app.post('/login', (req, res) => {
   if(!user){
     return res.status(403).end();
   }
-  //compare password
-  if(password !== user.password){
-    return res.status(403).end();
-  }
-
+  // compare password
+  bcrypt.compare(password, user.password, (err, success) => {
+    if (!success) {
+      return res.status(403).send("403 Forbidden");
+    }
   res.cookie('user_id', user.id)
   res.redirect('/urls')
-
+  })
 });
 
 //logout
@@ -223,20 +222,24 @@ app.post('/register', (req, res) => {
 
   if (findUserByEmail(users, email)) {
     return res.status(400).end();
-  }
+  };
+
+  const hashedPassword = bcrypt.genSalt(10, (err, salt) => {
+    console.log('my salt: ', salt);
+    bcrypt.hash(password, salt, (error, hash) => {
+    console.log('my hash: ', hash);
 
   const user = {
     id: generateRandomString(),
     email,
-    password,
-  }
+    password: hash,
+  };
   users[user.id] = user;
   res.cookie('user_id', user.id);
-
-  console.log('new id', user.id)
   res.redirect('/urls');
+  })
 })
-
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
