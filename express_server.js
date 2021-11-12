@@ -3,7 +3,7 @@ const app = express();
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
-const {findUserByEmail} = require('./helpers');
+const {getUserByEmail} = require('./helpers');
 
 const PORT = 8080; // default port 8080
 
@@ -200,7 +200,7 @@ app.post('/urls/:shortURL', (req, res) => {
 app.post('/login', (req, res) => {
   const userID = req.session.userID;
   const { email, password } = req.body;
-  const user = findUserByEmail(users, email);
+  const user = getUserByEmail(users, email);
 
   //check if user exists
   if(!user){
@@ -231,7 +231,7 @@ app.post('/register', (req, res) => {
     return res.status(400).end();
   }
 
-  if (findUserByEmail(users, email)) {
+  if (getUserByEmail(users, email)) {
     return res.status(400).end();
   };
 

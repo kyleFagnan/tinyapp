@@ -3,10 +3,10 @@
 
 
 //look up user by email
-const findUserByEmail = (usersData, email) => {
-  for (const user in usersData) {
-    if (email === usersData[user].email) {
-      return usersData[user];
+const getUserByEmail = function(email, userDatabase) {
+  for (let user in userDatabase) {
+    if (email === userDatabase[user].email) {
+      return user;
     }
   }
 };
@@ -14,4 +14,4 @@ const findUserByEmail = (usersData, email) => {
 
 
 
-module.exports = {findUserByEmail};
+module.exports = {getUserByEmail};
