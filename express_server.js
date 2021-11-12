@@ -52,6 +52,15 @@ const findUserByEmail = (usersData, email) => {
   }
 };
 
+const specificUrls = function(id, urlDatabase) {
+  const urlsForUserDatabase = {};
+  for (let key in urlDatabase) {
+    if (id === urlDatabase[key].userID) {
+      urlsForUserDatabase[key] = urlDatabase[key];
+    }
+  }
+  return urlsForUserDatabase;
+};
 
 //get requests
 
@@ -61,21 +70,28 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   
-  const templateVars = {
-    user: users[req.cookies['user_id']],
-    urls: urlDatabase };
+  const userID = req.cookies["user_id"];
+  const urlsForUserDatabase = specificUrls(userID, urlDatabase);
+  const templateVars = { urls: urlsForUserDatabase, user: users[userID] };
+  if (userID && !users[userID]) { 
+    
+    return res.redirect("/register");
+  }
   res.render("urls_index", templateVars);
 });
+
+
+
 
 //create a tiny URL
 app.get("/urls/new", (req, res) => {
   if(!users[req.cookies['user_id']]){
     return res.redirect('/register');
   }
-  const user = users.id;
   const templateVars = {user: users[req.cookies['user_id']]};
   res.render("urls_new", templateVars);
 });
+
 //info about short URL
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
@@ -109,6 +125,9 @@ app.get("/register", (req, res) => {
 //login page
 app.get("/login", (req, res) => {
   const userID = req.cookies['user_id'];
+  if(userID){
+    return res.redirect('/urls')
+  };
   const templateVars = {
     user: users[userID]
   }
@@ -123,13 +142,18 @@ app.get('/u/:shortURL', (req, res) => {
 
 //post requests
 
-
+//make a tiny URL
 app.post("/urls", (req, res) => {
  const shortRandm = generateRandomString();
-  urlDatabase[shortRandm] = req.body.longURL;
-  res.redirect(`/urls/${shortRandm}`);        
+  const longURL = req.body.longURL;
+  const userID = req.cookies["user_id"];
+  urlDatabase[shortRandm] = { longURL, userID };
+  
+  res.redirect(`/urls/${shortRandm}`);
 });
-
+ 
+ 
+ 
 //delete url and return home
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
