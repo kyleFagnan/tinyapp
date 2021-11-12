@@ -1,10 +1,10 @@
 const express = require("express");
-const app = express();
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
 const {getUserByEmail} = require('./helpers');
 
+const app = express();
 const PORT = 8080; // default port 8080
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -86,10 +86,9 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  
   const userID = req.session.userID;
   const urlsForUserDatabase = specificUrls(userID, urlDatabase);
-  const templateVars = { urls: urlsForUserDatabase, user: userID };
+  const templateVars = { urls: urlsForUserDatabase, user: users[userID] };
   if (!userID) { 
     
     return res.redirect("/register");
@@ -104,9 +103,9 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const userID = req.session.userID;
   if(!userID){
-    return res.redirect('/register');
+    return res.redirect('/login');
   }
-  const templateVars = {user: req.session.userID};
+  const templateVars = {user: users[userID]};
   res.render("urls_new", templateVars);
 });
 
@@ -118,8 +117,8 @@ app.get("/urls/:shortURL", (req, res) => {
   }
   const longURL = urlDatabase[shortURL].longURL;
   const userID = req.session.userID;
-  
-  const templateVars = {shortURL,user: users['user_id'],longURL,}
+  const owner = creator(userID, urlDatabase, shortURL);
+  const templateVars = {shortURL,user: users['user_id'],longURL, owner}
   res.render("urls_show", templateVars);
 })
 
@@ -134,7 +133,7 @@ app.get("/hello", (req, res) => {
 //registration page
 app.get("/register", (req, res) => {
   const userID = req.session.userID;
-  if (users[userID]) return res.redirect('/urls');
+  if (userID) return res.redirect('/urls');
   const templateVars = {
     user: users[userID]
   }
@@ -155,7 +154,8 @@ app.get("/login", (req, res) => {
 
 
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = req.params.shortURL;
+  const shortURL = req.params.shortURL
+  const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -163,9 +163,9 @@ app.get('/u/:shortURL', (req, res) => {
 
 //make a tiny URL
 app.post("/urls", (req, res) => {
- const shortRandm = generateRandomString();
-  const longURL = req.body.longURL;
   const userID = req.session.userID;
+ const shortRandm = generateRandomString();
+  let longURL = req.body.longURL;
   urlDatabase[shortRandm] = { longURL, userID };
   
   res.redirect(`/urls/${shortRandm}`);
@@ -178,7 +178,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
   const urlCreator = creator(req.session.userID, urlDatabase, shortURL);
   if(!urlCreator) {
-    return res.status(403).send("Not authorized to delete");
+    return res.status(401).send("Not authorized to delete");
   }
   delete urlDatabase[shortURL];
   res.redirect("/urls");
@@ -189,7 +189,7 @@ app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const urlCreator = creator(req.session.userID, urlDatabase, shortURL);
   if(!urlCreator) {
-    return res.status(403).send("Not authorized to edit");
+    return res.status(401).send("Not authorized to edit");
   }
   const longURL = req.body.longURL
   urlDatabase[shortURL].longURL = longURL;
@@ -199,15 +199,18 @@ app.post('/urls/:shortURL', (req, res) => {
 //Login
 app.post('/login', (req, res) => {
   const userID = req.session.userID;
-  const { email, password } = req.body;
-  const user = getUserByEmail(users, email);
+  if (userID) return res.redirect("/urls");
+
+  const  email = req.body.email;
+  const password = req.body.password;
+  const user = getUserByEmail(email, users);
 
   //check if user exists
   if(!user){
-    return res.status(403).end();
+    return res.status(400).send('Email not found');
   }
   // compare password
-  bcrypt.compare(password, user.password, (err, success) => {
+  bcrypt.compare(password, users[user].password, (err, success) => {
     
     if (!success) {
       return res.status(403).send("403 Forbidden");
@@ -231,23 +234,16 @@ app.post('/register', (req, res) => {
     return res.status(400).end();
   }
 
-  if (getUserByEmail(users, email)) {
+  if (getUserByEmail(email, users)) {
     return res.status(400).end();
   };
 
-  const hashedPassword = bcrypt.genSalt(10, (err, salt) => {
-    // console.log('my salt: ', salt);
-    bcrypt.hash(password, salt, (error, hash) => {
-    // console.log('my hash: ', hash);
-
-  const user = {
-    id: generateRandomString(),
-    email,
-    password: hash,
-  };
-  users[user.id] = user;
-  req.session.userID = user;
-  res.redirect('/urls');
+  bcrypt.genSalt(10, (err, salt) => {
+    bcrypt.hash(password, salt, (err, hash) => {
+      const id = generateRandomString();
+      users[id] = { id, email, password: hash };
+      req.session.userID = id;
+      res.redirect('/urls');
   })
 })
 });
