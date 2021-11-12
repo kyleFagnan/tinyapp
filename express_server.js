@@ -3,6 +3,7 @@ const app = express();
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
+const {findUserByEmail} = require('./helpers');
 
 const PORT = 8080; // default port 8080
 
@@ -48,13 +49,13 @@ function generateRandomString() {
 }
 
 //look up user by email
-const findUserByEmail = (usersData, email) => {
-  for (const user in usersData) {
-    if (email === usersData[user].email) {
-      return usersData[user];
-    }
-  }
-};
+// const findUserByEmail = (usersData, email) => {
+//   for (const user in usersData) {
+//     if (email === usersData[user].email) {
+//       return usersData[user];
+//     }
+//   }
+// };
 
 const specificUrls = function(id, urlDatabase) {
   const urlsForUserDatabase = {};
