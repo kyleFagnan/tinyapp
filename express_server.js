@@ -48,15 +48,7 @@ const generateRandomString = function() {
   return Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
 };
 
-//look up user by email
-// const findUserByEmail = (usersData, email) => {
-//   for (const user in usersData) {
-//     if (email === usersData[user].email) {
-//       return usersData[user];
-//     }
-//   }
-// };
-
+//check for user specific urls
 const specificUrls = function(id, urlDatabase) {
   const urlsForUserDatabase = {};
   for (let key in urlDatabase) {
