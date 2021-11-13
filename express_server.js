@@ -91,7 +91,7 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlsForUserDatabase, user: users[userID] };
   if (!userID) { 
     
-    return res.redirect("/register");
+    return res.redirect("/login");
   }
   res.render("urls_index", templateVars);
 });

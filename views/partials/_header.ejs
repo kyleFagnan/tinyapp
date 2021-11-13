@@ -9,11 +9,11 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
         <% if(!user) {%>
-        <a href="/register">Register</a>
-        <a href="/login">Login</a>
+        <a class="nav-item nav-link" style="padding-right: 10px" href="/register">Register</a>
+        <a class="nav-item nav-link" href="/login">Login</a>
         <% } if(user) { %>
-          <p>Logged in as: <%=user.email%> </p>
-          <form method="post" action="/logout"><button type="submit">logout</button> 
+          <p class="nav-item nav-link">Logged in as: <%=user.email%> </p>
+          <form class="nav-item nav-link" method="post" action="/logout"><button type="submit">logout</button> 
           </form>
           <% } %> 
       </div>
