@@ -2,7 +2,7 @@ const express = require("express");
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
-const {getUserByEmail} = require('./helpers');
+const {getUserByEmail, addHTTPS} = require('./helpers');
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -69,8 +69,6 @@ const creator = function(cookie, urlDatabase, key) {
 
 
 
-
-
 //get requests
 
 app.get("/", (req, res) => {
@@ -105,8 +103,15 @@ app.get("/urls/new", (req, res) => {
 //info about short URL
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
+
+  const urlCreator = creator(req.session.userID, urlDatabase, shortURL);
+  if (!urlCreator) {
+    return res.status(401).send("Not authorized to edit");
+  }
+
+
   if (!urlDatabase[shortURL]) {
-    return res.send("url not found");
+    return res.redirect("/not_found");
   }
   const longURL = urlDatabase[shortURL].longURL;
   const userID = req.session.userID;
@@ -145,7 +150,7 @@ app.get("/login", (req, res) => {
   res.render('urls_login', templateVars);
 });
 
-//redirect to long url
+// redirect to long url
 app.get('/u/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL].longURL;
@@ -157,8 +162,12 @@ app.get('/u/:shortURL', (req, res) => {
 //make a tiny URL
 app.post("/urls", (req, res) => {
   const userID = req.session.userID;
+  if (!users[userID]) {
+    return res.status(401).send('401 Unauthorized - Only registered users can create new URLs');
+  };
   const shortRandm = generateRandomString();
   let longURL = req.body.longURL;
+  longURL = addHTTPS(longURL);
   urlDatabase[shortRandm] = { longURL, userID };
   
   res.redirect(`/urls/${shortRandm}`);
@@ -184,8 +193,8 @@ app.post('/urls/:shortURL', (req, res) => {
   if (!urlCreator) {
     return res.status(401).send("Not authorized to edit");
   }
-  const longURL = req.body.longURL;
-  urlDatabase[shortURL].longURL = longURL;
+  const newURL = addHTTPS(req.body.newURL);
+  urlDatabase[shortURL].longURL = newURL;
   res.redirect('/urls');
 });
 

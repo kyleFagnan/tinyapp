@@ -11,7 +11,15 @@ const getUserByEmail = function(email, userDatabase) {
   }
 };
 
+//add http:// 
+const addHTTPS = function(url) {
+  if (url.substring(0,8) !== "http://") {
+    return ("http://").concat(url);
+  }
+  return url;
+};
 
 
 
-module.exports = {getUserByEmail};
+
+module.exports = {getUserByEmail, addHTTPS};
