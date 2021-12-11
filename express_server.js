@@ -2,7 +2,9 @@ const express = require("express");
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
-const {getUserByEmail, addHTTPS} = require('./helpers');
+const {getUserByEmail, generateRandomString, creator, specificUrls } = require('./helpers');
+const urlDatabase = require('./database/url_database');
+const users = require('./database/user_database')
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -15,64 +17,14 @@ app.use(cookieSession({
   keys: ['key1', 'key2'],
 }));
 
-//URL database object
-const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: 'user1'
-  },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userID: 'user2'
-  }
-};
-
-//users database object
-const users = {
-  'user1': {
-    id: 'user1',
-    email: 'user1@email.com',
-    password: 'user1Pass'
-  },
-  'user2': {
-    id: 'user2',
-    email: 'user2@email.com',
-    password: 'user2Pass'
-  }
-};
-
-//helper functions
-
-//generate random ID
-const generateRandomString = function() {
-  return Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
-};
-
-//check for user specific urls
-const specificUrls = function(id, urlDatabase) {
-  const urlsForUserDatabase = {};
-  for (let key in urlDatabase) {
-    if (id === urlDatabase[key].userID) {
-      urlsForUserDatabase[key] = urlDatabase[key];
-    }
-  }
-  return urlsForUserDatabase;
-};
-//check if user created url
-const creator = function(cookie, urlDatabase, key) {
-  let urlCreator = true;
-  if (cookie !== urlDatabase[key].userID) {
-    return urlCreator = false;
-  }
-  return urlCreator;
-};
-
-
-
 //get requests
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const userID = req.session.userID;
+  if (userID) {
+    return res.redirect("/urls");
+  }
+  res.redirect("/login");
 });
 
 //list of users urls
@@ -82,13 +34,10 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlsForUserDatabase, user: users[userID] };
   if (!userID) {
     
-    return res.redirect("/login");
+    return res.status(403).send("Login first");
   }
   res.render("urls_index", templateVars);
 });
-
-
-
 
 //create a tiny URL
 app.get("/urls/new", (req, res) => {
@@ -108,8 +57,7 @@ app.get("/urls/:shortURL", (req, res) => {
   if (!urlCreator) {
     return res.status(401).send("Not authorized to edit");
   }
-
-
+  
   if (!urlDatabase[shortURL]) {
     return res.redirect("/not_found");
   }
@@ -162,20 +110,18 @@ app.get('/u/:shortURL', (req, res) => {
 //make a tiny URL
 app.post("/urls", (req, res) => {
   const userID = req.session.userID;
-  if (!users[userID]) {
+  if (!userID) {
     return res.status(401).send('401 Unauthorized - Only registered users can create new URLs');
   };
   const shortRandm = generateRandomString();
-  let longURL = req.body.longURL;
-  longURL = addHTTPS(longURL);
-  urlDatabase[shortRandm] = { longURL, userID };
+  const longURL = req.body.longURL;
+  
+  urlDatabase[shortRandm] = { longURL: `https://${longURL}`, userID };
   
   res.redirect(`/urls/${shortRandm}`);
 });
  
- 
- 
-//delete url and return home
+ //delete url and return home
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
   const urlCreator = creator(req.session.userID, urlDatabase, shortURL);
@@ -215,7 +161,7 @@ app.post('/login', (req, res) => {
   bcrypt.compare(password, users[user].password, (err, success) => {
     
     if (!success) {
-      return res.status(403).send("403 Forbidden");
+      return res.status(403).send("Email or password Error");
     }
     req.session.userID = user;
     res.redirect('/urls');
@@ -232,11 +178,11 @@ app.post('/logout', (req, res) => {
 app.post('/register', (req, res) => {
   const {email, password} = req.body;
   if (password === '' || email === '') {
-    return res.status(400).end();
+    return res.status(400).send('Email or Password Cannot be blank');
   }
 
   if (getUserByEmail(email, users)) {
-    return res.status(400).end();
+    return res.status(400).send('???');
   }
   
   //hash plaintext password
