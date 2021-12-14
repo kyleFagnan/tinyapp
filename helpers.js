@@ -33,6 +33,15 @@ const getUserByEmail = function(email, userDatabase) {
     }
   }
 };
+//checks if url contains http if not adds it to url.
+const addHTTPS = function(url) {
+  if (url.includes(`http://`)) {
+    return url;
+  } 
+  return `https://${url}`;
+};
 
 
-module.exports = {getUserByEmail, generateRandomString, creator, specificUrls };
+
+
+module.exports = {getUserByEmail, generateRandomString, creator, specificUrls, addHTTPS };

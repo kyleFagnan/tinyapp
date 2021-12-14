@@ -2,7 +2,7 @@ const express = require("express");
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
-const {getUserByEmail, generateRandomString, creator, specificUrls } = require('./helpers');
+const {getUserByEmail, generateRandomString, creator, specificUrls, addHTTPS } = require('./helpers');
 const urlDatabase = require('./database/url_database');
 const users = require('./database/user_database')
 
@@ -116,7 +116,7 @@ app.post("/urls", (req, res) => {
   const shortRandm = generateRandomString();
   const longURL = req.body.longURL;
   
-  urlDatabase[shortRandm] = { longURL: `https://${longURL}`, userID };
+  urlDatabase[shortRandm] = { longURL: addHTTPS(longURL), userID };
   
   res.redirect(`/urls/${shortRandm}`);
 });
