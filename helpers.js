@@ -35,7 +35,7 @@ const getUserByEmail = function(email, userDatabase) {
 };
 //checks if url contains http if not adds it to url.
 const addHTTPS = function(url) {
-  if (url.includes(`http://`)) {
+  if (url.includes(`http://`) || url.includes('https://')) {
     return url;
   } 
   return `https://${url}`;

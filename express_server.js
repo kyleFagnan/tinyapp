@@ -171,7 +171,7 @@ app.post('/login', (req, res) => {
 //logout and remove cookies
 app.post('/logout', (req, res) => {
   req.session = null;
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 //add new user to global users object
@@ -182,7 +182,7 @@ app.post('/register', (req, res) => {
   }
 
   if (getUserByEmail(email, users)) {
-    return res.status(400).send('???');
+    return res.status(400).send('User already Registered');
   }
   
   //hash plaintext password
